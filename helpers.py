@@ -3,7 +3,7 @@ import numpy as np
 
 def prettify_ax(ax):
     ''' make an axis pretty '''
-    for spine in ax.spines.itervalues():
+    for spine in iter(ax.spines.values()):
         spine.set_visible(False)
     ax.set_frameon=True
     ax.patch.set_facecolor('#eeeeef')
@@ -23,7 +23,7 @@ def earliest_date_after(query_date, date_list):
     for i in range(len(date_list)):
         if query_date < date_list[i].date():
             return date_list[i].date()
-    print '\nQUERY DATE ERROR WITH:', query_date, '\n'
+    print('\nQUERY DATE ERROR WITH:', query_date, '\n')
     raise Exception('No values after query date')
 
 def latest_date_before(query_date, date_list):
@@ -31,10 +31,10 @@ def latest_date_before(query_date, date_list):
     for i in range(len(date_list)):
         if query_date < date_list[i].date():
             if i==0:
-                print '\nQUERY DATE ERROR WITH:', query_date, '\n'
+                print('\nQUERY DATE ERROR WITH:', query_date, '\n')
                 raise Exception('No values before query date in list')
             return date_list[i-1].date()
-    print '\nQUERY DATE ERROR WITH:', query_date, '\n'
+    print('\nQUERY DATE ERROR WITH:', query_date, '\n')
     raise Exception('No values after query date in list; this could densensitize model')
 
 def inv_price_transform(normalized_data, scaler):
@@ -51,4 +51,4 @@ def plotHyperparameterTuning(x, y, param_name):
     a.set_ylabel('RMSE')
     a.set_title('RMSE vs %s on Validation Set' % param_name)
     plt.savefig('hyperparameters/curves/%s.png' % param_name)
-    print "%s tuning complete and curve saved to /hyperparameters/curves/\n\n" % param_name
+    print("%s tuning complete and curve saved to /hyperparameters/curves/\n\n" % param_name)

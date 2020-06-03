@@ -54,14 +54,14 @@ class StockModel():
             new_row += list(reddit_df.loc[earliest_date_after(stock_date, reddit_df.index),:])
             return_df.loc[stock_date] = new_row
             if row_num % 100 == 0:
-                print "%i/%i rows done." % (row_num, stock_df.shape[0]),
-        print "\n%s dataframe prepped. %i timepoints, each with %i features." % \
-              (self.ticker, return_df.shape[0], return_df.shape[1])
+                print("%i/%i rows done." % (row_num, stock_df.shape[0]))
+        print("\n%s dataframe prepped. %i timepoints, each with %i features." % \
+              (self.ticker, return_df.shape[0], return_df.shape[1]))
         return return_df
 
     def loadStock(self, lookback=25, validation_split=True):
         ''' load and scale data, split into training/validation/test sets '''
-        print "\n\n...loading %s stock" % self.ticker
+        print("\n\n...loading %s stock" % self.ticker)
         df = self.__loadData()
         data = df.values
         if validation_split:
@@ -88,7 +88,7 @@ class StockModel():
                                         np.array(dataX[n_train:])
             self.y_train, self.y_test = np.array(dataY[:n_train]), \
                                         np.array(dataY[n_train:])
-        print "Data normalized and split."
+        print("Data normalized and split.")
 
     def __buildModel(self, lstm_dim1, lstm_dim2, dropout, dense_dim1):
         ''' build keras model '''
@@ -117,18 +117,18 @@ class StockModel():
     def train(self, lstm_dim1=128, lstm_dim2=128, dropout=0.2, dense_dim1=None, epochs=200):
         ''' build and train model '''
         t0 = time.time()
-        print "\n\n...beginning training"
+        print("\n\n...beginning training")
         model = self.__buildModel(lstm_dim1, lstm_dim2, dropout, dense_dim1)
         history = self.__fitModel(model, epochs)
-        print "TRAINING DONE. %i seconds to train.\n\n" % int(time.time()-t0)
+        print("TRAINING DONE. %i seconds to train.\n\n" % int(time.time()-t0))
         return model, history
 
     def validate(self, model):
         ''' run one-day lookup and return rmse if validate or predictions if test '''
-        print "\n\n...validating"
+        print("\n\n...validating")
         predictions = model.predict(self.X_valid)
         rmse = np.sqrt(np.mean((predictions-self.y_valid)**2))
-        print "Validation complete with RMSE of:", rmse
+        print("Validation complete with RMSE of:", rmse)
         return rmse
 
     def __predictDays(self, startday, days_topredict, model):
@@ -145,7 +145,7 @@ class StockModel():
 
     def plotOneDayCurve(self, model, filename='onedaycurve0.png'):
         ''' predict one day in future on test set and print '''
-        print "\n\n...plotting one-day lookahead curve"
+        print("\n\n...plotting one-day lookahead curve")
         predictions = model.predict(self.X_test)
         f, a = simple_ax(figsize=(10,6))
         a.plot(predictions, c='b', label='predictions')
@@ -155,11 +155,11 @@ class StockModel():
         a.set_title('%s Test Set Predictions'%self.ticker)
         plt.legend()
         plt.savefig('figures/lstm/'+self.ticker+'_'+filename)
-        print "One-day lookahead curve successfully plotted and saved."
+        print("One-day lookahead curve successfully plotted and saved.")
 
     def plotFutureCurves(self, model, days_topredict=30, filename='futurecurves0.png'):
         ''' predict future days and plot curves on test set '''
-        print "\n\n...plotting future curves"
+        "\n\n...plotting future curves"
         f, a = simple_ax(figsize=(10,6))
         a.plot(inv_price_transform(self.y_test, self.scaler), c='k')
         for segment in range(int(len(self.y_test)/days_topredict)):
@@ -172,7 +172,7 @@ class StockModel():
         a.set_ylabel('Price')
         a.set_title('%s Test Set %i Day Lookahead' % (self.ticker, days_topredict))
         plt.savefig('figures/lstm/'+self.ticker+'_'+filename)
-        print "Future Curves successfully plotted and saved."
+        print("Future Curves successfully plotted and saved.")
 
     def _decideBuySell(self, startpoint, days_topredict, model, return_threshold):
         '''
@@ -201,13 +201,13 @@ class StockModel():
             elif decision is False:
                 sell_dates.append(t)
             if t%20==0:
-                print "%i/%i timepoints calculated." % (t+1,len(self.y_test)),
-        print "Data walk complete."
+                print("%i/%i timepoints calculated." % (t+1,len(self.y_test)))
+        print("Data walk complete.")
         return buy_dates, sell_dates
 
     def plotBuySellPoints(self, model, return_threshold=0.5, days_topredict=30, filename='buysell0.png'):
         ''' plot points to buy or sell stock '''
-        print "\n\n...plotting buy-sell point graph"
+        print("\n\n...plotting buy-sell point graph")
         buy_dates, sell_dates = self.__walkBuySell(days_topredict, model, return_threshold)
         f,a = simple_ax(figsize=(10,6))
         a.plot(inv_price_transform(self.y_test, self.scaler), c='k')
@@ -219,12 +219,12 @@ class StockModel():
         recs = [mpatches.Rectangle((0,0),1,1,fc='g'), mpatches.Rectangle((0,0),1,1,fc='r')]
         a.legend(recs,['buy', 'sell'], loc=2, prop={'size':14})
         plt.savefig('figures/lstm/'+self.ticker+'_'+filename)
-        print "Buy-sell decision points successfully plotted and saved."
+        print("Buy-sell decision points successfully plotted and saved.")
 
     def plotPortfolioReturn(self, model, initial_cash=10000, per_trade_value=500,\
                             return_threshold=0.5, days_topredict=30, filename='portfolio0.png'):
         ''' walk the test set buying and selling, plot portfolio value over time '''
-        print "\n\n...plotting portfolio return over time"
+        print("\n\n...plotting portfolio return over time")
         buy_dates, sell_dates = self.__walkBuySell(days_topredict, model, return_threshold)
         cash = initial_cash
         stocks_per_trade = max([int(round(per_trade_value/self.y_test[0])), 1])
@@ -246,4 +246,4 @@ class StockModel():
         a.set_ylabel('Portfolio Percent Return')
         a.set_title('Portfolio Value Over Time Trading %s on Test Set' % self.ticker)
         plt.savefig('figures/lstm/'+self.ticker+'_'+filename)
-        print "Portfolio return graph successfully plotted and saved."
+        print("Portfolio return graph successfully plotted and saved.")
